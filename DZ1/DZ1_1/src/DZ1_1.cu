@@ -11,39 +11,37 @@
 #include <numeric>
 #include <stdlib.h>
 #include <iostream>
-#include <fstream>
-//#include <string>
-//#include <iomanip>
+#include <iomanip>
 
 static void CheckCudaErrorAux (const char *, unsigned, const char *, cudaError_t);
 #define CUDA_CHECK_RETURN(value) CheckCudaErrorAux(__FILE__,__LINE__, #value, value)
 
 static const int time_s = 10;
 static const float st_len = 100.0;
+static const float ht = 0.001;
 static const float hx = 0.1;
 static const float hx2 = 0.01;
-static const float ht = 0.001;
 static const float hthx2 = ht/hx2;
 
-__global__ void reciprocalKernel(float *data, float *nData, unsigned vectorSize) {
+__global__ void reciprocalKernel(float *k_cur, float *k_next, unsigned k_size) {
 	unsigned idx = blockIdx.x*blockDim.x+threadIdx.x;
 	if (idx == 0) {
-		data[idx] = nData[idx] + 5;
-	} else if (idx < vectorSize - 1) {
-		data[idx] = - hthx2 * nData[idx + 1] + (2 * hthx2 + 1) * nData[idx] - hthx2 * nData[idx - 1] ;
-		//data[idx] = (oData[idx + 1] - 2 * oData[idx] + oData[idx - 1]) * ht / hx2 + oData[idx];
+		k_cur[idx] = k_next[idx] + 5 * ht ;
+	} else if (idx < k_size - 1) {
+		//k_cur[idx] = - hthx2 * k_next[idx + 1] + (2 * hthx2 + 1) * k_next[idx] - hthx2 * k_next[idx - 1] ;
+		k_next[idx] = k_cur[idx] + hthx2*(k_next[idx + 1] - 2 * k_next[idx] + k_next[idx - 1] );
 	}
 }
 
 
-float *gpuReciprocal(float *data, unsigned size)
+float *gpuReciprocal(float *hostData, unsigned size)
 {
 	float ht_count = time_s / ht;
 	//float **rt = new float*[ht_count];
 	float GPUTime = 0.0f;
 	float *rc = new float[size];
-	float *gpuData2;
-	float *gpuData;
+	float *devNext;
+	float *devCur;
 	float *buf;
 
 	cudaEvent_t start, stop;
@@ -53,33 +51,33 @@ float *gpuReciprocal(float *data, unsigned size)
 	//for(int i = 0; i < ht_count; i++)
 	//	rt[i] = new float[size];
 
-	CUDA_CHECK_RETURN(cudaMalloc((void **)&gpuData2, mem_size));
-	CUDA_CHECK_RETURN(cudaMalloc((void **)&gpuData, mem_size));
-	CUDA_CHECK_RETURN(cudaMemcpy(gpuData2, data, mem_size, cudaMemcpyHostToDevice));
-	CUDA_CHECK_RETURN(cudaMemcpy(gpuData, data, mem_size, cudaMemcpyHostToDevice));
+	CUDA_CHECK_RETURN(cudaMalloc((void **)&devNext, mem_size));
+	CUDA_CHECK_RETURN(cudaMalloc((void **)&devCur, mem_size));
+	CUDA_CHECK_RETURN(cudaMemcpy(devNext, hostData, mem_size, cudaMemcpyHostToDevice));
+	CUDA_CHECK_RETURN(cudaMemcpy(devCur, hostData, mem_size, cudaMemcpyHostToDevice));
 
-	static const int BLOCK_SIZE = 256;
+	static const int BLOCK_SIZE = 512;
 	const int blockCount = (size+BLOCK_SIZE-1)/BLOCK_SIZE;
 
-	cudaEventCreate ( &start );
-	cudaEventCreate ( &stop );
-	cudaEventRecord (start , 0);
+	cudaEventCreate (&start);
+	cudaEventCreate (&stop);
+	cudaEventRecord (start, 0);
 
 	for (int i = 0; i < ht_count; i++)
 	{
-		reciprocalKernel<<<blockCount, BLOCK_SIZE>>> (gpuData, gpuData2, size);
-		buf = gpuData;
+		reciprocalKernel<<<blockCount, BLOCK_SIZE>>> (devCur, devNext, size);
+		buf = devCur;
 		//CUDA_CHECK_RETURN(cudaMemcpy(rt[i], gpuData, mem_size, cudaMemcpyDeviceToHost));
-		gpuData = gpuData2;
-		gpuData2 = buf;
+		devCur = devNext;
+		devNext = buf;
 	}
 
 	cudaEventRecord ( stop , 0);
 	cudaEventSynchronize ( stop );
 	cudaEventElapsedTime ( &GPUTime, start, stop);
-	printf("GPU time: %.3f mS\n", GPUTime);
+	std::cout << std::setprecision(3) << "GPU time: " << GPUTime << " mS"<< std::endl;
 
-	CUDA_CHECK_RETURN(cudaMemcpy(rc, gpuData2, sizeof(float)*size, cudaMemcpyDeviceToHost));
+	CUDA_CHECK_RETURN(cudaMemcpy(rc, devNext, sizeof(float)*size, cudaMemcpyDeviceToHost));
 
 //	for(int i = 0; i < size; i++){
 //		for(int j = 0; j < size; j++){
@@ -89,8 +87,8 @@ float *gpuReciprocal(float *data, unsigned size)
 //	}
 //	a_file.close();
 
-	CUDA_CHECK_RETURN(cudaFree(gpuData2));
-	CUDA_CHECK_RETURN(cudaFree(gpuData));
+	CUDA_CHECK_RETURN(cudaFree(devNext));
+	CUDA_CHECK_RETURN(cudaFree(devCur));
 //	for(int i = 0; i < ht_count; i++)
 //			delete[] rt[i];
 
@@ -114,10 +112,11 @@ int main(void)
 	float *recGpu = gpuReciprocal(data, WORK_SIZE);
 
 	for (int i = 0; i < WORK_SIZE; i++){
-		std::cout << recGpu[i] << std::endl;
+		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(4) << std::setw(15)
+			<< recGpu[i];
 	}
+	std::cout << std::endl;
 
-	/* Free memory */
 	delete[] data;
 	delete[] recGpu;
 

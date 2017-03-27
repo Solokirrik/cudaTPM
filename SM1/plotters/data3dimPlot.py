@@ -16,13 +16,13 @@ X, Y = np.meshgrid(X, Y)
 
 surf = ax.plot_surface(X, Y, Z, cmap=cm.Blues, rstride=1, cstride=1, linewidth=1, edgecolors='black')
 
-ax.set_zlim(Z.min(), Z.max() + 0.1 * Z.max())
+ax.set_zlim(Z.min(), Z.max())
 ax.zaxis.set_major_locator(LinearLocator(10))
-ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+ax.zaxis.set_major_formatter(FormatStrFormatter('%.3f'))
 
 fig.colorbar(surf, shrink=0.5, aspect=5)
 
-plt.title("Входное воздействие")
+# plt.title("Входное воздействие")
 plt.title("Результат")
 plt.xlabel("X")
 plt.ylabel("Y")
