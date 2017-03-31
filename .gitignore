@@ -2,3 +2,5 @@ ASM/
 **/.idea/
 **/.ipynb_checkpoints/
 **/Debug/
+**/pictures/
+*.zip

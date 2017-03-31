@@ -10,7 +10,6 @@
 
 #include <numeric>
 #include <stdlib.h>
-#include <fstream>
 #include <iostream>
 #include <iomanip>
 
@@ -19,24 +18,23 @@ static void CheckCudaErrorAux (const char *, unsigned, const char *, cudaError_t
 
 static const int time_s = 10;
 static const float st_len = 100.0;
-static const float dx = 0.1;
-static const float dx2 = 0.01;
-static const float dt = 0.001;
+static const float hx = 0.1;
+static const float hx2 = 0.01;
+static const float ht = 0.001;
 
 
 __global__ void reciprocalKernel(float *k_cur, float *k_next, unsigned vectorSize) {
 	unsigned idx = blockIdx.x*blockDim.x+threadIdx.x;
 	if (idx == 0) {
-		k_next[idx] = k_cur[idx] + 5 * dt;
+		k_next[idx] = k_cur[idx] + 5 * ht;
 	} else if (idx < vectorSize - 1) {
-		k_next[idx] = (k_cur[idx + 1] - 2 * k_cur[idx] + k_cur[idx - 1]) * dt / dx2 + k_cur[idx];
+		k_next[idx] = (k_cur[idx + 1] - 2 * k_cur[idx] + k_cur[idx - 1]) * ht / hx2 + k_cur[idx];
 	}
 }
 
 
 float *gpuReciprocal(float *hostData, unsigned size)
 {
-	float ht_count = time_s / dt;
 	float GPUTime = 0.0f;
 
 	float *buf;
@@ -59,7 +57,7 @@ float *gpuReciprocal(float *hostData, unsigned size)
 	cudaEventCreate (&stop);
 	cudaEventRecord (start , 0);
 
-	for (int i = 0; i < ht_count; i++)
+	for (int i = 0; i < time_s / ht; i++)
 	{
 		reciprocalKernel<<<blockCount, BLOCK_SIZE>>> (devCur, devNext, size);
 		buf = devCur;
@@ -70,7 +68,7 @@ float *gpuReciprocal(float *hostData, unsigned size)
 	cudaEventRecord ( stop , 0);
 	cudaEventSynchronize ( stop );
 	cudaEventElapsedTime ( &GPUTime, start, stop);
-	std::cout << std::setprecision(3) << "GPU time: " << GPUTime << " mS"<< std::endl;
+//	std::cout << std::setprecision(3) << "GPU time: " << GPUTime << " mS"<< std::endl;
 
 	CUDA_CHECK_RETURN(cudaMemcpy(rc, devNext, sizeof(float)*size, cudaMemcpyDeviceToHost));
 
@@ -89,7 +87,7 @@ void initData(float *data, unsigned size)
 
 int main(void)
 {
-	static const int WORK_SIZE = st_len / dx;
+	static const int WORK_SIZE = st_len / hx;
 	float *data = new float[WORK_SIZE];
 
 	initData (data, WORK_SIZE);
