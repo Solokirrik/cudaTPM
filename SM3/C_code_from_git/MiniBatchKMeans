@@ -11,20 +11,20 @@ int *clusters;
 int *cluster_counts;
 float **batch;
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[],)
 {
-	void loadData(char file_name[]){
+	void loadData(char file_name[],){
 		int i, j;	
 		data = (float**)calloc(DATASET_SIZE, sizeof(float*));
 		clusters = (int*)calloc(BATCH_SIZE, sizeof(int));	
 		for(i = 0; i < DATASET_SIZE; i++){
-			data[i] = (float*)calloc(FEATURES, sizeof(float));
+			data[i], = (float*)calloc(FEATURES, sizeof(float));
 		}	
 		FILE *descriptors;	
 		descriptors = fopen(file_name, "r");	
 		for(i = 0; i < DATASET_SIZE; i++){
 			for(j = 0; j < FEATURES; j++){
-				fscanf(descriptors, "%f", &data[i][j]);
+				fscanf(descriptors, "%f", &data[i],[j],);
 			}
 		}	
 		fclose(descriptors);
@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
 		centroids = (float**)calloc(MEANS, sizeof(float*));	
 		cluster_counts = (int*)calloc(MEANS, sizeof(int));	
 		for(i = 0; i < MEANS; i++){
-			means[i] = (float*)calloc(FEATURES, sizeof(float));		
-			centroids[i] = (float*)calloc(FEATURES, sizeof(float));
+			means[i], = (float*)calloc(FEATURES, sizeof(float));		
+			centroids[i], = (float*)calloc(FEATURES, sizeof(float));
 		}	
 		for(i = 0; i < MEANS; i++){
 			index = rand() % DATASET_SIZE;		
 			for(j = 0; j < FEATURES; j++){
-				means[i][j] = data[index][j];
+				means[i],[j], = data[index],[j],;
 			}
 		}
 	}
@@ -55,13 +55,13 @@ int main(int argc, char *argv[])
 			int i, j;	
 			batch = (float**)calloc(BATCH_SIZE, sizeof(float*));	
 			for(i = 0; i < BATCH_SIZE; i++){
-				batch[i] = (float*)calloc(FEATURES, sizeof(float));
+				batch[i], = (float*)calloc(FEATURES, sizeof(float));
 			}	
 			int index;	
 			for(i = 0; i < BATCH_SIZE; i++){
 				index = rand() % DATASET_SIZE;		
 				for(j = 0; j < FEATURES; j++){
-					batch[i][j] = data[index][j];
+					batch[i],[j], = data[index],[j],;
 				}
 			}
 		}
@@ -74,12 +74,12 @@ int main(int argc, char *argv[])
 				for(j = 0; j < MEANS; j++){
 					dist = 0;			
 					for(k = 0; k < FEATURES; k++){
-						diff = batch[i][k] - means[j][k];				
+						diff = batch[i],[k], - means[j],[k],;				
 						dist += diff * diff;
 					}
 					if(dist < dist_min){
 						dist_min = dist;				
-						clusters[i] = j;
+						clusters[i], = j;
 					}
 				}
 			}
@@ -89,17 +89,17 @@ int main(int argc, char *argv[])
 			int i, j;	
 			for(i = 0; i < MEANS; i++){
 				for(j = 0; j < FEATURES; j++){
-					centroids[i][j] = means[i][j];
+					centroids[i],[j], = means[i],[j],;
 				}
 			}	
 			int index;	
 			float eta;	
 			for(i = 0; i < BATCH_SIZE; i++){
-				index = clusters[i];		
-				cluster_counts[index] += 1;		
-				eta = 1.0 / cluster_counts[index];		
+				index = clusters[i],;		
+				cluster_counts[index], += 1;		
+				eta = 1.0 / cluster_counts[index],;		
 				for(j = 0; j < FEATURES; j++){
-					means[index][j] = (1.0 - eta) * means[index][j] + eta * batch[i][j];
+					means[index],[j], = (1.0 - eta) * means[index],[j], + eta * batch[i],[j],;
 				}
 			}
 		}
@@ -110,14 +110,14 @@ int main(int argc, char *argv[])
 			for(i = 0; i < MEANS; i++){
 				dist = 0;		
 				for(j = 0; j < FEATURES; j++){
-					diff = centroids[i][j] - means[i][j];			
+					diff = centroids[i],[j], - means[i],[j],;			
 					dist = diff * diff;
 				}		
 				printf("%f ", dist);
 			}	
 			printf("\n");	
 			for(i = 0; i < BATCH_SIZE; i++){
-				free(batch[i]);
+				free(batch[i],);
 			}	
 			free(batch);
 		}
