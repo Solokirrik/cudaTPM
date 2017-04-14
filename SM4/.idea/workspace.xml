@@ -4,30 +4,7 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ffbbd2c2-0cda-48ff-996e-0a60edf4d041" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Scoring_trees.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/DBSCAN.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/DBSCAN.h" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/README" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/dbScan.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/expandCluster.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/loadData.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/printData.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/DBSCAN-master/regionQuery.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/README" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/cacheClusters.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/calculateError.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/initializeMeans.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/loadData.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/miniBatch.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/miniBatch.h" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/selectBatch.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/Mini-Batch-K-Means-master/updateMeans.c" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/../SM3/C_code_from_git/MiniBatchKMeans" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../.gitignore" afterPath="$PROJECT_DIR$/../.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../GPU_lect/Лекция6_ML/Notebooks/Scoring_trees.ipynb" afterPath="$PROJECT_DIR$/../GPU_lect/Лекция6_ML/Notebooks/Scoring_trees.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../SM3/KMeans.py" afterPath="$PROJECT_DIR$/../SM3/KMeans.py" />
-    </list>
+    <list default="true" id="ffbbd2c2-0cda-48ff-996e-0a60edf4d041" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -41,8 +18,8 @@
       <file leaf-file-name="Scoring_trees.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Scoring_trees.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="190">
-              <caret line="41" column="12" lean-forward="true" selection-start-line="41" selection-start-column="12" selection-end-line="41" selection-end-column="12" />
+            <state relative-caret-position="250">
+              <caret line="44" column="12" lean-forward="true" selection-start-line="44" selection-start-column="12" selection-end-line="44" selection-end-column="12" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -309,8 +286,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Scoring_trees.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="41" column="12" lean-forward="true" selection-start-line="41" selection-start-column="12" selection-end-line="41" selection-end-column="12" />
+        <state relative-caret-position="250">
+          <caret line="44" column="12" lean-forward="true" selection-start-line="44" selection-start-column="12" selection-end-line="44" selection-end-column="12" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
