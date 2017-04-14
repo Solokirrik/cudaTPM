@@ -79,7 +79,7 @@ class KMean:
         return new_data
 
 
-image = mpimg.imread('./mailru.jpg')
+image = mpimg.imread('./pictures/mailru.jpg')
 plt.axis("off")
 plt.imshow(image)
 plt.show()

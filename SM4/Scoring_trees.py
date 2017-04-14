@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
@@ -62,6 +63,7 @@ def init_list_of_objects(size):
         list_of_objects.append(list())
     return list_of_objects
 
+list_size = pow(2, X.shape[1] + 1) - 1
 treeList = init_list_of_objects(pow(2, X.shape[1] + 1) - 1)
 sizeArr = np.zeros((X.shape[1] + 1, 2))
 print(len(treeList))
@@ -81,3 +83,46 @@ sizeArr[2][0] = treeList[2][0].shape[0]/treeList[0][0].shape[0]
 sizeArr[2][1] = treeList[2][0].shape[0]/treeList[0][0].shape[0]
 print(treeList[2][0].shape[0], sizeArr[2], treeList[2])
 
+
+def normalize_feature(vector):
+    return vector / vector.sum()
+
+
+def get_divn():
+    beta = 1
+    return beta
+
+
+def choose_best_feature():
+    feature = 1
+    return feature
+
+for i in range(3, len(treeList)):
+    if i % 2:
+        mask = treeList[i//2] > get_divn()
+        treeList[i] = np.where(mask)
+    else:
+        mask = treeList[i//2 - 1] > get_divn()
+        treeList[i] = np.where(~mask)
+
+
+def get_h(X):
+    new_r = X.T[0]
+    ar_h1_h2_g = np.zeros((X.T[0].shape[0], 3))
+    for el in range(len(new_r)):
+        beta = new_r[el]
+        if beta != 0:
+            p1 = (beta > new_r).sum() / new_r.shape[0]
+            p2 = (beta <= new_r).sum() / new_r.shape[0]
+            ar_h1_h2_g[el][0] = -p1*np.log(p1)
+            ar_h1_h2_g[el][1] = -p2*np.log(p2)
+            ar_h1_h2_g[el][2] = p1*ar_h1_h2_g[el][0] + p2*ar_h1_h2_g[el][1]
+    print(ar_h1_h2_g)
+    print(ar_h1_h2_g.T[2].min(), ar_h1_h2_g.T[2].argmin())
+#     newRR = np.where(mask)
+#     print(newRR)
+#     print(mask.sum(), mask2.sum())
+
+t1 = time.time()
+get_h(X)
+print("%.3fsec" % (time.time() - t1))
