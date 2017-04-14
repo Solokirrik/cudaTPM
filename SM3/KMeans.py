@@ -44,12 +44,10 @@ class KMean:
         t1 = time.time()
         self.__data = data_g
         self.__means = self.__init_mass_centers()
-        if self.__timers:
-            print("Dots moved:", "\t", "Step time sec:")
+        print("Dots moved:", "\t", "Step time sec:")
         new_cnt = 1
         while new_cnt > 0:
-            if self.__timers:
-                t0 = time.time()
+            t0 = time.time()
             new_cnt = 0
             self.cent_data = self.__init_list_of_objects()
             for dot in range(len(self.__data)):
@@ -58,16 +56,13 @@ class KMean:
                 min_ind = clust_dist.argmin()
                 self.cent_data[min_ind].append(dot)
             new_cnt = self.__rclc_means(new_cnt)
-            if self.__timers:
-                print("%11d \t %.3f" % (new_cnt, time.time() - t0))
-        if self.__timers:
-            print("Done in: ")
-            print("%.3fsec" % (time.time() - t1))
+            print("%11d \t %.3f" % (new_cnt, time.time() - t0))
+        print("Done in: ")
+        print("%.3fsec" % (time.time() - t1))
         return self
 
     def predict(self, data_g):
-        if self.__timers:
-            t1 = time.time()
+        t1 = time.time()
         predict_cent_data = self.__init_list_of_objects()
         for dot in range(len(data_g)):
             sqr_diff = (self.__means - np.array([data_g[dot]] * self.__means_cfg)) ** 2
@@ -79,9 +74,8 @@ class KMean:
         for row in range(len(predict_cent_data)):
             for item in range(len(predict_cent_data[row])):
                 new_data[predict_cent_data[row][item]] = self.__means[row]
-        if self.__timers:
-            print("Done in: ")
-            print("%.3fsec" % (time.time() - t1))
+        print("Done in: ")
+        print("%.3fsec" % (time.time() - t1))
         return new_data
 
 
