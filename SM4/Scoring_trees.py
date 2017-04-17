@@ -106,7 +106,7 @@ def choose_best_feature():
 #         treeList[i] = np.where(~mask)
 
 
-def get_beta(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
+def get_split_p(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
     new_r = np.sort(inp_vec)
     ll = new_r.argmin()
     rr = new_r.shape[0] - 1
@@ -117,6 +117,7 @@ def get_beta(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
     min_g = 2
     g = np.zeros((2,))
     b = np.zeros((2,))
+    out = np.zeros((2,))
     while 1:
         iter_io += 1
         m0 = (l + r) // 2
@@ -150,7 +151,6 @@ def get_beta(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
             r = m0
         else:
             l = m0
-
         delta = min_g - g.min()
         if eps < delta:
             min_g = g.min()
@@ -161,14 +161,24 @@ def get_beta(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
                 print("argG", "\t", g.argmin())
                 print("g0", "\t\t", '%.8f' % g[0])
                 print("g1", "\t\t", '%.8f' % g[1])
-            return b[g.argmin()]
+            # out[0] = b[g.argmin()]
+            # out[1] = g[g.argmin()]
+            out = np.array([b[g.argmin()], g[g.argmin()], g[g.argmax()]])
+            return out
         if print_q:
             print(iter_io, ")", l, m0, m1, r)
             print("delta", "\t", delta)
             print("g0", "\t\t", '%.8f' % g[0])
             print("g1", "\t\t", '%.8f' % g[1])
-            print("--------------")
+            print("-------------------------")
 
-t1 = time.time()
-print("beta", "\t", get_beta(y, X.T[0], 0, print_q=True))
-print("Done in: %.3fs" % (time.time() - t1))
+bet = 0
+for i in range(X.shape[1]):
+    gb = get_split_p(y, X.T[i], bet, print_q=False)
+    bet = gb[0]
+    print('%i)' % (i+1), "beta =", bet)
+    print("G1 =", '%.5f' % gb[1])
+    print("G2 =", '%.5f' % gb[2])
+    print(np.min(X.T[i]), np.mean(X.T[i]), np.max(X.T[i]))
+    print("-------------------------")
+
