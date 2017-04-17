@@ -1,6 +1,6 @@
-import pandas as pd
-import numpy as np
 import time
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
@@ -106,65 +106,69 @@ def choose_best_feature():
 #         treeList[i] = np.where(~mask)
 
 
-def get_h(X):
-    # t1 = time.time()
-    new_r = X.T[0]
-    ar_h1_h2_g = np.zeros((X.T[0].shape[0], 3))
-    for el in range(len(new_r)):
-        beta = new_r[el]
-        if beta != 0:
-            p1 = (beta > new_r).sum() / new_r.shape[0]
-            p2 = (beta <= new_r).sum() / new_r.shape[0]
-            ar_h1_h2_g[el][0] = -p1*np.log(p1)
-            ar_h1_h2_g[el][1] = -p2*np.log(p2)
-            ar_h1_h2_g[el][2] = p1*ar_h1_h2_g[el][0] + p2*ar_h1_h2_g[el][1]
-    # print("%.3fsec" % (time.time() - t1))
-    print(ar_h1_h2_g)
-    print(ar_h1_h2_g.T[2].min(), ar_h1_h2_g.T[2].argmin())
-# get_h(X)
+def get_beta(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
+    new_r = np.sort(inp_vec)
+    ll = new_r.argmin()
+    rr = new_r.shape[0] - 1
+    l = ll
+    r = rr
+    x_len = new_r.shape[0]
+    iter_io = 0
+    min_g = 2
+    g = np.zeros((2,))
+    b = np.zeros((2,))
+    while 1:
+        iter_io += 1
+        m0 = (l + r) // 2
+        m1 = m0 + (r - m0) // 2
+        b[0] = new_r[m0]
+        b[1] = new_r[m1]
+        x0l_len = m0 - ll
+        x0r_len = rr - m0
+        x1l_len = m1 - ll
+        x1r_len = rr - m1
 
-newR = X.T[0]
-ar_H1H2G = np.zeros((newR.shape[0], ))
-t1 = time.time()
-for el in range(len(newR)):
-    beta1 = ((np.array([newR.shape[0], ])*newR[el] - newR) > 0).sum()
-    if (beta1 != 0) and (beta1 != newR.shape[0]):
-        p1 = beta1 / newR.shape[0]
-        # p2 = 1 - p1
-        ar_H1H2G[el] = -pow(p1, 2)*np.log(p1) - pow(1 - p1, 2)*np.log(1 - p1)
-    else:
-        ar_H1H2G[el] = 5
-print("%.3fsec" % (time.time() - t1))
-print(ar_H1H2G)
-print(ar_H1H2G.min(), ar_H1H2G.argmin())
+        p00l = ((y_vec > beta) * (new_r <= b[0])).sum() / x0l_len
+        p00r = ((y_vec > beta) * (new_r > b[0])).sum() / x0r_len
+        p10l = ((y_vec <= beta) * (new_r <= b[0])).sum() / x0l_len
+        p10r = ((y_vec <= beta) * (new_r > b[0])).sum() / x0r_len
 
+        p01l = ((y_vec > beta) * (new_r <= b[1])).sum() / x1l_len
+        p01r = ((y_vec > beta) * (new_r > b[1])).sum() / x1r_len
+        p11l = ((y_vec <= beta) * (new_r <= b[1])).sum() / x1l_len
+        p11r = ((y_vec <= beta) * (new_r > b[1])).sum() / x1r_len
 
-l = 0
-r = newR.shape[0] - 1
-ar_len = newR.shape[0]
-while r - l > 1:
-    m = (l + r) // 2
-    bm = newR[m]
-    pm = ((y > 0)*(X.T[0] > bm)).sum() / ar_len
-    if pm != 0:
-        gm = -pow(pm, 2)*np.log(pm) - pow((1 - pm), 2)*np.log(1 - pm)
-        br = newR[r]
-        pr = ((y > 0)*(X.T[0] > br)).sum() / ar_len
-        if pr != 0:
-            gr = -pow(pr, 2)*np.log(pr) - pow((1 - pr), 2)*np.log(1 - pr)
-            if gm < gr:
-                r = m
-            else:
-                l = m
-            print(gm + gr)
-#             print("---------------------------")
-#             print("m=", m, "newR[m]=", newR[m])
-#             print("r=", r, "newR[r]=", newR[r])
-#             print("pm=", pm, "gm=", gm)
-#             print("pr=", pr, "gr=", gr)
+        hl = p00l * p10l
+        hr = p00r * p10r
+        h1l = p01l * p11l
+        h1r = p01r * p11r
+
+        g[0] = (x0l_len / x_len) * hl + (x0r_len / x_len) * hr
+        g[1] = (x1l_len / x_len) * h1l + (x1r_len / x_len) * h1r
+
+        if g[0] < g[1]:
+            r = m0
         else:
-            r = r - 1
-#             print("r0!", pr, r)
-    else:
-        m = m - 1
-#         print("m0!", pm, m)
+            l = m0
+
+        delta = min_g - g.min()
+        if eps < delta:
+            min_g = g.min()
+        else:
+            if print_q:
+                print(iter_io, ")", l, m0, m1, r)
+                print("delta", "\t", delta)
+                print("argG", "\t", g.argmin())
+                print("g0", "\t\t", '%.8f' % g[0])
+                print("g1", "\t\t", '%.8f' % g[1])
+            return b[g.argmin()]
+        if print_q:
+            print(iter_io, ")", l, m0, m1, r)
+            print("delta", "\t", delta)
+            print("g0", "\t\t", '%.8f' % g[0])
+            print("g1", "\t\t", '%.8f' % g[1])
+            print("--------------")
+
+t1 = time.time()
+print("beta", "\t", get_beta(y, X.T[0], 0, print_q=True))
+print("Done in: %.3fs" % (time.time() - t1))
