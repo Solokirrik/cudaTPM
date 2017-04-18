@@ -174,7 +174,7 @@ def get_split_p(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
 
 bet = 0
 for i in range(X.shape[1]):
-    gb = get_split_p(y, X.T[i], bet, print_q=False)
+    gb = get_split_p(y, X.T[i], bet, print_q=True)
     bet = gb[0]
     print('%i)' % (i+1), "beta =", bet)
     print("G1 =", '%.5f' % gb[1])
