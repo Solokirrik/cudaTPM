@@ -1,10 +1,10 @@
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import KFold
 
+# import matplotlib.pyplot as plt
+# from sklearn.metrics import accuracy_score
+# from sklearn.model_selection import KFold
 # from sklearn.ensemble import RandomForestClassifier
 # from sklearn.tree import DecisionTreeClassifier
 
@@ -14,6 +14,8 @@ df = df.dropna()
 X = df.as_matrix(columns=df.columns[1:])
 y = df.as_matrix(columns=df.columns[:1])
 y = y.reshape(y.shape[0])
+
+
 # gkf = KFold(n_splits=5, shuffle=True)
 
 
@@ -120,7 +122,8 @@ def get_split_p(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
             print("g1", "\t\t", '%.8f' % g[1])
             print("-------------------------")
 
-def get_beta(inp_vec, print_q=False, eps=pow(10, -10)):
+
+def get_beta(y_vec, y_beta, inp_vec, print_q=False, eps=pow(10, -10)):
     new_r = np.sort(inp_vec)
     ll = 0
     rr = new_r.shape[0] - 1
@@ -128,9 +131,9 @@ def get_beta(inp_vec, print_q=False, eps=pow(10, -10)):
     r = rr
     x_len = new_r.shape[0]
     min_g = 2
-    g = np.zeros((2,))
-    b = np.zeros((2,))
-    m = np.zeros((2,))
+    g = np.zeros((2, ))
+    b = np.zeros((2, ))
+    m = np.zeros((2, ))
     out = np.zeros((2,))
     while r - l > 1:
         m[0] = (l + r) // 2
@@ -147,15 +150,15 @@ def get_beta(inp_vec, print_q=False, eps=pow(10, -10)):
         x1l_len = m[1] - ll
         x1r_len = rr - m[1]
 
-        p00l = (new_r <= b[0]).sum() / x0l_len
-        p00r = (new_r > b[0]).sum() / x0r_len
-        p10l = (new_r <= b[0]).sum() / x0l_len
-        p10r = (new_r > b[0]).sum() / x0r_len
+        p00l = ((y_vec > y_beta) * (new_r <= b[0])).sum() / x0l_len
+        p00r = ((y_vec > y_beta) * (new_r > b[0])).sum() / x0r_len
+        p10l = ((y_vec <= y_beta) * (new_r <= b[0])).sum() / x0l_len
+        p10r = ((y_vec <= y_beta) * (new_r > b[0])).sum() / x0r_len
 
-        p01l = (new_r <= b[1]).sum() / x1l_len
-        p01r = (new_r > b[1]).sum() / x1r_len
-        p11l = (new_r <= b[1]).sum() / x1l_len
-        p11r = (new_r > b[1]).sum() / x1r_len
+        p01l = ((y_vec > y_beta) * (new_r <= b[1])).sum() / x1l_len
+        p01r = ((y_vec > y_beta) * (new_r > b[1])).sum() / x1r_len
+        p11l = ((y_vec <= y_beta) * (new_r <= b[1])).sum() / x1l_len
+        p11r = ((y_vec <= y_beta) * (new_r > b[1])).sum() / x1r_len
 
         hl = p00l * p10l
         hr = p00r * p10r
@@ -184,11 +187,13 @@ def init_list_of_objects(size):
         list_of_objects.append(list())
     return list_of_objects
 
+
 def index_to_vec(inp_list, x, col):
     out_vec = np.zeros((1, len(inp_list)))
     for index in range(len(inp_list)):
         out_vec[0][index] = x.T[col][inp_list[index]]
     return out_vec
+
 
 def init_list_of_arrs(size):
     list_of_arrs = list()
@@ -207,7 +212,7 @@ def init_list_of_arrs(size):
 
 list_size = pow(2, X.shape[1] + 1) - 1
 arrList = init_list_of_arrs(list_size)
-best_features_beta = np.zeros((list_size,2))
+best_features_beta = np.zeros((list_size, 2))
 
 t1 = time.time()
 
@@ -232,9 +237,9 @@ b_g_arr = np.zeros((features, 2))
 for item in range(3, int(list_size)):
     for feature in features_list:
         if item % 2:
-            b_g_arr[feature] = get_beta(arrList[item // 2].T[feature])
+            b_g_arr[feature] = get_beta(y, 0, arrList[item // 2].T[feature])
         else:
-            b_g_arr[feature] = get_beta(arrList[item // 2 - 1].T[feature])
+            b_g_arr[feature] = get_beta(y, 0, arrList[item // 2 - 1].T[feature])
     bst_feat = b_g_arr.T[1:2].argmin()
     # print(item, iter, bst_feat)
     beta = b_g_arr[bst_feat][0]
