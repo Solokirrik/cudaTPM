@@ -60,7 +60,7 @@ class LogisticRegression():
     def sigmoid_activation(self, x):
         return 1.0 / (1 + np.exp(-x))
 
-    def fit(self, X, y, epochs=100):
+    def fit(self, X, y, epochs=1000):
         Xn = (X - X.min()) / X.ptp(0)
         X1 = np.c_[np.ones((Xn.shape[0])), Xn]
         if not self.fitted:
@@ -73,16 +73,17 @@ class LogisticRegression():
             preds = self.sigmoid_activation(X1.dot(self.W))
             error = preds - y
             loss = np.sum(error) / X1.shape[0]
+            # print(loss)
             gradient = X1.T.dot(error) / X1.shape[0]
             self.W += - alpha * gradient
             # alpha = np.linalg.norm(gradient) / np.linalg.norm(preds)
-            # print(loss)
         # print(self.W)
 
     def predict(self, X):
         Xn = (X - X.min()) / X.ptp(0)
         X1 = np.c_[np.ones((Xn.shape[0])), Xn]
-        return (self.sigmoid_activation(X1.dot(self.W)) >= 0.5) * 1
+        print(X1.shape)
+        return self.sigmoid_activation(X1.dot(self.W))
 
     def fit_predict(self):
         pass
@@ -94,15 +95,14 @@ X = df.as_matrix(columns=df.columns[1:])
 y = df.as_matrix(columns=df.columns[:1])
 y = y.reshape(y.shape[0])
 
-# (X, y) = make_blobs(n_samples=250, n_features=10, centers=2, cluster_std=1.05, random_state=20)
+# (X, y) = make_blobs(n_samples=25000, n_features=10, centers=2, cluster_std=1.5, random_state=20)
 
 gkf = KFold(n_splits=5, shuffle=True)
 
-print(X.shape)
-print(y.shape)
+# print(X.shape)
+# print(y.shape)
 
-
-lin = LinearRegression()
+# lin = LinearRegression()
 log = LogisticRegression()
 
 # X_train, y_train = X, y
@@ -116,6 +116,7 @@ for train, test in gkf.split(X, y):
     log.fit(X_train, y_train)
     print(roc_auc_score(y_score=log.predict(X_test), y_true=y_test))
     print("%.3fsec" % (time.time() - t1))
+    print("----------------------------------")
 
 y_score=log.predict(X_test)
 fpr, tpr, _ = metrics.roc_curve(y_score=y_score, y_true=y_test)
