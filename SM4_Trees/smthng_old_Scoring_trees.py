@@ -18,6 +18,11 @@ y = y.reshape(y.shape[0])
 
 # gkf = KFold(n_splits=5, shuffle=True)
 
+# sort in column
+# a0 = np.array([[1,88,3,4],[7,9,6,4],[0,0,1,5]])
+# a1 = a0[a0[:,1].argsort()]
+# print(a0, '\n')
+# print(a1)
 
 class DecisionTreeClassifier:
     def __init__(self):
@@ -58,6 +63,27 @@ class RandomForestClassifier:
 #     clf.fit(X_train, y_train)
 #     print(accuracy_score(y_pred=clf.predict(X_test), y_true=y_test))
 
+def init_list_of_objects(size):
+    list_of_objects = list()
+    for i in range(0, size):
+        list_of_objects.append(list())
+    return list_of_objects
+
+
+def index_to_vec(inp_list, x, col):
+    out_vec = np.zeros((1, len(inp_list)))
+    for index in range(len(inp_list)):
+        out_vec[0][index] = x.T[col][inp_list[index]]
+    return out_vec
+
+
+def init_list_of_arrs(size):
+    list_of_arrs = list()
+    for i in range(0, size):
+        list_of_arrs.append(np.zeros((1, 1)))
+    return list_of_arrs
+
+
 def get_split_p(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
     new_r = np.sort(inp_vec)
     ll = new_r.argmin()
@@ -69,7 +95,6 @@ def get_split_p(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
     min_g = 2
     g = np.zeros((2,))
     b = np.zeros((2,))
-    out = np.zeros((2,))
     while 1:
         iter_io += 1
         m0 = (l + r) // 2
@@ -123,7 +148,7 @@ def get_split_p(y_vec, inp_vec, beta, print_q=False, eps=pow(10, -10)):
             print("-------------------------")
 
 
-def get_beta(y_vec, y_beta, inp_vec, print_q=False, eps=pow(10, -10)):
+def get_beta(y_vec, y_beta, inp_vec, eps=pow(10, -10)):
     new_r = np.sort(inp_vec)
     ll = 0
     rr = new_r.shape[0] - 1
@@ -134,7 +159,6 @@ def get_beta(y_vec, y_beta, inp_vec, print_q=False, eps=pow(10, -10)):
     g = np.zeros((2, ))
     b = np.zeros((2, ))
     m = np.zeros((2, ))
-    out = np.zeros((2,))
     while r - l > 1:
         m[0] = (l + r) // 2
         m[1] = m[0] + (r - m[0]) // 2
@@ -181,66 +205,81 @@ def get_beta(y_vec, y_beta, inp_vec, print_q=False, eps=pow(10, -10)):
             return out
 
 
-def init_list_of_objects(size):
-    list_of_objects = list()
-    for i in range(0, size):
-        list_of_objects.append(list())
-    return list_of_objects
+def get_b_ns(y_vec, y_beta, inp_vec, perc=0.01):
+    w_vec = inp_vec
+    if w_vec.shape[0] > 1000:
+        btch_sz = int(w_vec.shape[0] * perc)
+    else:
+        btch_sz = w_vec.shape[0]
+    arr_of_numbs = np.linspace(0, w_vec.shape[0] - 1, btch_sz, dtype=int)
+    item_beta_g_arr = np.zeros((btch_sz, 3))
+    iter_c = 0
+    for item in arr_of_numbs:
+        beta = w_vec[item]
 
+        xl_len = (w_vec[arr_of_numbs] <= beta).sum()
+        xr_len = btch_sz - xl_len
+        if xl_len != 0 and xr_len != 0:
 
-def index_to_vec(inp_list, x, col):
-    out_vec = np.zeros((1, len(inp_list)))
-    for index in range(len(inp_list)):
-        out_vec[0][index] = x.T[col][inp_list[index]]
-    return out_vec
+            p0l = ((y_vec[arr_of_numbs] <= y_beta) * (w_vec[arr_of_numbs] <= beta)).sum() / xl_len
+            p0r = ((y_vec[arr_of_numbs] <= y_beta)*(w_vec[arr_of_numbs] > beta)).sum() / xr_len
+            p1l = ((y_vec[arr_of_numbs] > y_beta) * (w_vec[arr_of_numbs] <= beta)).sum() / xl_len
+            p1r = ((y_vec[arr_of_numbs] > y_beta)*(w_vec[arr_of_numbs] > beta)).sum() / xr_len
 
+            # hl = p0l * p1l
+            # hr = p0r * p1r
 
-def init_list_of_arrs(size):
-    list_of_arrs = list()
-    for i in range(0, size):
-        list_of_arrs.append(np.zeros((1, 1)))
-    return list_of_arrs
+            hl = -p0l * np.log(p0l) - p1l * np.log(p1l)
+            hr = -p0r * np.log(p0r) - p1r * np.log(p1r)
 
-
-# for i in range(3, len(treeList)):
-#     if i % 2:
-#         mask = treeList[i//2] > get_divn()
-#         treeList[i] = treeList[np.where(mask)]
-#     else:
-#         mask = treeList[i//2 - 1] > get_divn()
-#         treeList[i] = np.where(~mask)
+            item_beta_g_arr[iter_c][0] = item
+            item_beta_g_arr[iter_c][1] = beta
+            item_beta_g_arr[iter_c][2] = (xl_len / btch_sz) * hl + (xr_len / btch_sz) * hr
+        else:
+            item_beta_g_arr[iter_c][2] = 10
+        iter_c += 1
+    bestG = item_beta_g_arr.T[2].argmin()
+    # return item_beta_g_arr[item_beta_g_arr.T[2].argmin()]
+    return np.array([item_beta_g_arr[bestG][1], item_beta_g_arr[bestG][2]])
 
 list_size = pow(2, X.shape[1] + 1) - 1
+# list_size = 2047
 arrList = init_list_of_arrs(list_size)
 best_features_beta = np.zeros((list_size, 2))
 
 t1 = time.time()
 
-arrList[0] = X
-beta = 0
+
 features = X.shape[1]
-mask = y > beta
+features_list = [i for i in range(features)]
+b_g_arr = np.zeros((features, 2))
+
+arrList[0] = X
+for feature in features_list:
+    b_g_arr[feature] = get_b_ns(y, 0, arrList[0].T[feature])
+bst_feat = b_g_arr.T[1].argmin()
+beta = b_g_arr[bst_feat][0]
+b_g_arr[bst_feat] = float("inf")
+mask = X.T[bst_feat] > beta
 arrList[1] = X[mask]
 arrList[2] = X[~mask]
 
 print(0, arrList[0].shape)
 print("-----------")
-print(1, arrList[1].shape)
-print(2, arrList[2].shape)
+print(1, bst_feat, arrList[1].shape)
+print(2, bst_feat, arrList[2].shape)
 print("-----------")
 
-features_list = []
-for i in range(features):
-    features_list.append(i)
 iter = 0
-b_g_arr = np.zeros((features, 2))
 for item in range(3, int(list_size)):
     for feature in features_list:
         if item % 2:
             b_g_arr[feature] = get_beta(y, 0, arrList[item // 2].T[feature])
+            # b_g_arr[feature] = get_b_ns(y, 0, arrList[item // 2].T[feature])
         else:
             b_g_arr[feature] = get_beta(y, 0, arrList[item // 2 - 1].T[feature])
-    bst_feat = b_g_arr.T[1:2].argmin()
+            # b_g_arr[feature] = get_b_ns(y, 0, arrList[item // 2 - 1].T[feature])
+    bst_feat = b_g_arr.T[1].argmin()
     # print(item, iter, bst_feat)
     beta = b_g_arr[bst_feat][0]
     if item % 2:
@@ -251,7 +290,7 @@ for item in range(3, int(list_size)):
         arrList[item] = arrList[item // 2 - 1][~mask]
     best_features_beta[0] = bst_feat
     best_features_beta[1] = beta
-    if (item // (pow(2, iter + 3) - 2)):
+    if ((item - 1) // (pow(2, iter + 3) - 2)):
         iter += 1
         # b_g_arr[bst_feat] = float("nan")
         b_g_arr[bst_feat] = float("inf")
@@ -259,4 +298,5 @@ for item in range(3, int(list_size)):
         print(b_g_arr)
         print("-----------")
     print(item, iter, bst_feat, arrList[item].shape)
+    item += 1
 print("%.3fsec" % (time.time() - t1))
