@@ -5,3 +5,4 @@ ASM/
 *.zip
 **/infoo/
 **/.idea/
+**/.~**
