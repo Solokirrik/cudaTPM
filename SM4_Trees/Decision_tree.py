@@ -52,19 +52,22 @@ class DecisionTreeClassifier:
 
         p_l_r = np.zeros((y_class_num, 2))
 
-        if w_vec.shape[0] > 100000:
-            perc = 0.01
-        if w_vec.shape[0] > 10000:
-            perc = 0.02
-        elif w_vec.shape[0] > 5000:
-            perc = 0.06
-        elif w_vec.shape[0] > 1000:
-            perc = 0.08
-        elif w_vec.shape[0] > 500:
-            perc = 0.5
+        # if w_vec.shape[0] > 100000:
+        #     perc = 0.01
+        # if w_vec.shape[0] > 10000:
+        #     perc = 0.02
+        # elif w_vec.shape[0] > 5000:
+        #     perc = 0.06
+        # elif w_vec.shape[0] > 1000:
+        #     perc = 0.08
+        # elif w_vec.shape[0] > 500:
+        #     perc = 0.5
+        if w_vec.shape[0] > 500:
+            btch_sz = 200
         else:
-            perc = 1
-        btch_sz = int(w_vec.shape[0] * perc)
+            # perc = 1
+            btch_sz = w_vec.shape[0]
+        # btch_sz = int(w_vec.shape[0] * perc)
         arr_of_numbs = np.linspace(0, w_vec.shape[0] - 1, btch_sz, dtype=int)
         item_beta_g_arr = np.zeros((btch_sz, 3))
         iter_c = 0
@@ -98,8 +101,8 @@ class DecisionTreeClassifier:
         return out
 
     def fit(self, X_train, y_train):
-        x_arrList = self._init_list_of_arrs_(self._list_size_)
-        y_arrList = self._init_list_of_arrs_(self._list_size_)
+        self.x_arrList = self._init_list_of_arrs_(self._list_size_)
+        self.y_arrList = self._init_list_of_arrs_(self._list_size_)
         best_features_beta = np.zeros((self._list_size_, 2))
 
         features = X_train.shape[1]
@@ -108,57 +111,59 @@ class DecisionTreeClassifier:
         leaf_size_list = []
         b_g_arr = np.zeros((features, 2))
 
-        x_arrList[0] = X_train
-        y_arrList[0] = y_train
+        self.x_arrList[0] = X_train
+        self.y_arrList[0]= y_train
         print("max_depth = ", self._depth_, "\t", "list_size = ", self._list_size_)
-        print(0, x_arrList[0].shape)
+        print(0, self.x_arrList[0].shape)
         print("-------------------------")
         iter = 0
         max_dict = []
         for i in range(int(pow(2, self._depth_ + 1) - 2)):
-            # if x_arrList[i].shape[0] > 1:
-            if np.unique(y_arrList[i]).shape[0] > 1:
+            # if self.x_arrList[i].shape[0] > 1:
+            if np.unique(self.y_arrList[i]).shape[0] > 1:
                 # choose best feature
+                starto = time.time()
                 for feature in features_list:
-                    b_g_arr[feature] = self._get_split_(y_arrList[i], x_arrList[i].T[feature])
-                    bst_feat = b_g_arr.T[1].argmin()
+                    b_g_arr[feature] = self._get_split_(self.y_arrList[i], self.x_arrList[i].T[feature])
+                bst_feat = b_g_arr.T[1].argmin()
+                print(time.time() - starto)
 
                 beta = b_g_arr[bst_feat][0]
                 best_features_beta[i][0] = bst_feat
                 best_features_beta[i][1] = beta
-                mask = x_arrList[i].T[bst_feat] > beta
+                mask = self.x_arrList[i].T[bst_feat] > beta
 
-                y_arrList[i * 2 + 1] = np.copy(y_arrList[i][mask])
-                y_arrList[i * 2 + 2] = np.copy(y_arrList[i][~mask])
-                x_arrList[i * 2 + 1] = np.copy(x_arrList[i][mask])
-                x_arrList[i * 2 + 2] = np.copy(x_arrList[i][~mask])
+                self.y_arrList[i * 2 + 1] = np.copy(self.y_arrList[i][mask])
+                self.y_arrList[i * 2 + 2] = np.copy(self.y_arrList[i][~mask])
+                self.x_arrList[i * 2 + 1] = np.copy(self.x_arrList[i][mask])
+                self.x_arrList[i * 2 + 2] = np.copy(self.x_arrList[i][~mask])
 
-                # print("%8.f" % (i * 2 + 1), "%7.f" % bst_feat, "%7.f" % x_arrList[i * 2 + 1].shape[0])
-                # print("%8.f" % (i * 2 + 2), "%7.f" % bst_feat, "%7.f" % x_arrList[i * 2 + 2].shape[0])
-                # print((i * 2 + 1), "\t", bst_feat, "\t", x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(y_arrList[i * 2 + 1]).shape[0])
-                # print((i * 2 + 2), "\t", bst_feat, "\t", x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(y_arrList[i * 2 + 2]).shape[0])
+                # print("%8.f" % (i * 2 + 1), "%7.f" % bst_feat, "%7.f" % self.x_arrList[i * 2 + 1].shape[0])
+                # print("%8.f" % (i * 2 + 2), "%7.f" % bst_feat, "%7.f" % self.x_arrList[i * 2 + 2].shape[0])
+                # print((i * 2 + 1), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 1]).shape[0])
+                # print((i * 2 + 2), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 2]).shape[0])
             else:
-                # print("%8.f" % (i * 2 + 1), "%16.f" % x_arrList[i * 2 + 1].shape[0])
-                # print("%8.f" % (i * 2 + 2), "%16.f" % x_arrList[i * 2 + 2].shape[0])
-                if x_arrList[i].shape > np.zeros((1, 1)).shape:
+                # print("%8.f" % (i * 2 + 1), "%16.f" % self.x_arrList[i * 2 + 1].shape[0])
+                # print("%8.f" % (i * 2 + 2), "%16.f" % self.x_arrList[i * 2 + 2].shape[0])
+                if self.x_arrList[i].shape > np.zeros((1, 1)).shape:
                     leaf_list.append(i)
-                    leaf_size_list.append(x_arrList[i].shape[0])
-                # print((i * 2 + 1),  "\t\t", x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(y_arrList[i * 2 + 1]).shape[0])
-                # print((i * 2 + 2),  "\t\t", x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(y_arrList[i * 2 + 2]).shape[0])
+                    leaf_size_list.append(self.x_arrList[i].shape[0])
+                # print((i * 2 + 1),  "\t\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 1]).shape[0])
+                # print((i * 2 + 2),  "\t\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 2]).shape[0])
 
-            max_dict.append(np.maximum(x_arrList[i * 2 + 1].shape[0], x_arrList[i * 2 + 2].shape[0]))
+            max_dict.append(np.maximum(self.x_arrList[i * 2 + 1].shape[0], self.x_arrList[i * 2 + 2].shape[0]))
             # lvl separators
             if (i // (pow(2, iter + 2) - 2)) or i == 0:
                 iter += 1
-                print("-------------------------")
+                print("-------------", iter,"------------")
                 if max(max_dict) == self._leafsize_:
                     break
                 else:
                     max_dict.clear()
         for i in range(int(pow(2, self._depth_ + 1) - 2), int(pow(2, self._depth_ + 2) - 2)):
-            if (np.unique(y_arrList[i]).shape[0] > 1) and (x_arrList[i].shape > np.zeros((1, 1)).shape):
+            if (np.unique(self.y_arrList[i]).shape[0] > 1) and (self.x_arrList[i].shape > np.zeros((1, 1)).shape):
                 leaf_list.append(i)
-                leaf_size_list.append(x_arrList[i].shape[0])
+                leaf_size_list.append(self.x_arrList[i].shape[0])
         print(len(leaf_list), sum(leaf_size_list))
 
     def predict(self, X_test):
