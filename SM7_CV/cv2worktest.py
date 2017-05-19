@@ -8,8 +8,10 @@ Nf = 500
 
 def fpsopencv(dat):
     tic = time()
+
     for i in dat:
-        cv2.imshow('test',i)
+        cv2.namedWindow('test1', cv2.WINDOW_NORMAL)
+        cv2.imshow('test1',i)
         cv2.waitKey(10) #integer milliseconds, 0 makes wait forever
     cv2.destroyAllWindows()
     return Nf / (time()-tic)
