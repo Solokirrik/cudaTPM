@@ -52,16 +52,6 @@ class DecisionTreeClassifier:
 
         p_l_r = np.zeros((y_class_num, 2))
 
-        # if w_vec.shape[0] > 100000:
-        #     perc = 0.01
-        # if w_vec.shape[0] > 10000:
-        #     perc = 0.02
-        # elif w_vec.shape[0] > 5000:
-        #     perc = 0.06
-        # elif w_vec.shape[0] > 1000:
-        #     perc = 0.08
-        # elif w_vec.shape[0] > 500:
-        #     perc = 0.5
         if w_vec.shape[0] > 500:
             btch_sz = 200
         else:
@@ -122,11 +112,11 @@ class DecisionTreeClassifier:
             # if self.x_arrList[i].shape[0] > 1:
             if np.unique(self.y_arrList[i]).shape[0] > 1:
                 # choose best feature
-                starto = time.time()
+                # starto = time.time()
                 for feature in features_list:
                     b_g_arr[feature] = self._get_split_(self.y_arrList[i], self.x_arrList[i].T[feature])
                 bst_feat = b_g_arr.T[1].argmin()
-                print(time.time() - starto)
+                # print(time.time() - starto)
 
                 beta = b_g_arr[bst_feat][0]
                 best_features_beta[i][0] = bst_feat
@@ -138,18 +128,36 @@ class DecisionTreeClassifier:
                 self.x_arrList[i * 2 + 1] = np.copy(self.x_arrList[i][mask])
                 self.x_arrList[i * 2 + 2] = np.copy(self.x_arrList[i][~mask])
 
+
                 # print("%8.f" % (i * 2 + 1), "%7.f" % bst_feat, "%7.f" % self.x_arrList[i * 2 + 1].shape[0])
                 # print("%8.f" % (i * 2 + 2), "%7.f" % bst_feat, "%7.f" % self.x_arrList[i * 2 + 2].shape[0])
+<<<<<<< Updated upstream
+                # print((i * 2 + 1), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t",
+                #         np.unique(self.y_arrList[i * 2 + 1]).shape[0])
+                # print((i * 2 + 2), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t",
+                #         np.unique(self.y_arrList[i * 2 + 2]).shape[0])
+=======
                 # print((i * 2 + 1), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 1]).shape[0])
                 # print((i * 2 + 2), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 2]).shape[0])
+
+                print((i * 2 + 1), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 1]).shape[0])
+                print((i * 2 + 2), "\t", bst_feat, "\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 2]).shape[0])
+>>>>>>> Stashed changes
             else:
-                # print("%8.f" % (i * 2 + 1), "%16.f" % self.x_arrList[i * 2 + 1].shape[0])
-                # print("%8.f" % (i * 2 + 2), "%16.f" % self.x_arrList[i * 2 + 2].shape[0])
                 if self.x_arrList[i].shape > np.zeros((1, 1)).shape:
                     leaf_list.append(i)
                     leaf_size_list.append(self.x_arrList[i].shape[0])
-                # print((i * 2 + 1),  "\t\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 1]).shape[0])
-                # print((i * 2 + 2),  "\t\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 2]).shape[0])
+<<<<<<< Updated upstream
+                # print((i * 2 + 1),  "\t\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t",
+                #         np.unique(self.y_arrList[i * 2 + 1]).shape[0])
+                # print((i * 2 + 2),  "\t\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t",
+                #         np.unique(self.y_arrList[i * 2 + 2]).shape[0])
+=======
+                # print("%8.f" % (i * 2 + 1), "%16.f" % self.x_arrList[i * 2 + 1].shape[0])
+                # print("%8.f" % (i * 2 + 2), "%16.f" % self.x_arrList[i * 2 + 2].shape[0])
+                print((i * 2 + 1),  "\t\t", self.x_arrList[i * 2 + 1].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 1]).shape[0])
+                print((i * 2 + 2),  "\t\t", self.x_arrList[i * 2 + 2].shape[0],  "\t\t", np.unique(self.y_arrList[i * 2 + 2]).shape[0])
+>>>>>>> Stashed changes
 
             max_dict.append(np.maximum(self.x_arrList[i * 2 + 1].shape[0], self.x_arrList[i * 2 + 2].shape[0]))
             # lvl separators
