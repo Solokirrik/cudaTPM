@@ -7,7 +7,7 @@ CASCADE = "./haar-hand.xml"
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_video', type=str, help='input video path', default='./video_samples/Long.avi')
+    parser.add_argument('--in_video', type=str, help='input video path', default='./video_samples/OpenClose2.avi')
     parser.add_argument('--in_cascade', type=str, help='input cascade path', default=CASCADE)
 
     args = parser.parse_args()
@@ -69,7 +69,7 @@ def main():
                 step_cntr = 0
 
             cv2.imshow('frame', gray)
-            cv2.imshow('blank', frame2)
+            cv2.imshow('track', frame2)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
