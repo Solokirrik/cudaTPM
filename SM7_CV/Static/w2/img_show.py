@@ -4,7 +4,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_file', type=str, help='input text file path', default='img.txt')
+    parser.add_argument('--in_file', type=str, help='input text file path', default='Labyrinth_1cuda.txt')
 
     args = parser.parse_args()
 
