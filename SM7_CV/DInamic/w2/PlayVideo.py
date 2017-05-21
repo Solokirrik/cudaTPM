@@ -7,7 +7,7 @@ CASCADE = "./haar-hand.xml"
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_video', type=str, help='input video path', default='./video_samples/OpenClose2.avi')
+    parser.add_argument('--in_video', type=str, help='input video path', default='./OpenClose2.avi')
     parser.add_argument('--in_cascade', type=str, help='input cascade path', default=CASCADE)
 
     args = parser.parse_args()
@@ -16,14 +16,16 @@ def main():
 
     if cap.isOpened():
         ret, frame = cap.read()
-        frame_hw = frame.shape
-        frame2 = np.zeros((frame_hw[0], frame_hw[1], 3), np.uint8) + 0
+        frame_h, frame_w,deep = frame.shape
+        frame2 = np.zeros((frame_h, frame_w, 3), np.uint8) + 0
         heat_map = np.zeros(frame2.shape)
 
         heat_fr = 3
         heat_eps = 1
-        d_default = frame_hw[1] // 4
         step_cntr = 0
+        d_default = frame_w // 4
+        cyan_prm = (255, 255, 0)
+        white_prm = (255, 255, 255)
 
         hand_crd = np.zeros((1, 2), np.int32)
         hand_crd = np.delete(hand_crd, 0, 0)
@@ -34,7 +36,6 @@ def main():
             if ret == True:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             else:
-                print('end of file reached')
                 break
 
             detects = haar_cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=6,
@@ -47,7 +48,7 @@ def main():
                 heat_max = heat_map.max()
                 # cv2.imshow('heatmap', heat_map)
                 if heat_max > heat_eps:
-                    hand_mean = np.argwhere(heat_map == heat_map.max()).mean(0, dtype=np.int32).reshape((1, 3))[:, :2]
+                    hand_mean = np.argwhere(heat_map == heat_map.max()).mean(0, dtype=np.int32).reshape((1, 3))[:,:2]
                     if cleared:
                         # hand_crd = np.vstack([hand_crd, hand_mean])
                         hand_len = len(hand_crd)
@@ -55,13 +56,14 @@ def main():
                         if d_default > d_step:
                             hand_crd = np.vstack([hand_crd, hand_mean])
                             hand_len = len(hand_crd)
-                            x0 = hand_crd[hand_len - 2][1]
-                            y0 = hand_crd[hand_len - 2][0]
-                            xc = hand_crd[hand_len - 1][1]
-                            yc = hand_crd[hand_len - 1][0]
-                            cv2.line(frame2, (x0, y0), (xc, yc), (255, 255, 0), 2)
-                            # cv2.polylines(frame2, [hand_crd], True, (255, 255, 255), 4)
-                            cv2.circle(frame2, (xc, yc), 2, (255, 255, 255), 2)
+                            yc, xc = hand_crd[hand_len - 1]
+                            y0, x0 = hand_crd[hand_len - 2]
+                            cv2.line(frame2, (x0, y0), (xc, yc), cyan_prm, 2)
+                            cv2.circle(frame2, (xc, yc), 2, white_prm, 2)
+                            if xc > frame_w // 2:
+                                cv2.rectangle(gray, (frame_w // 2, 0), (frame_w, frame_h), white_prm, 2)
+                            else:
+                                cv2.rectangle(gray, (0, 0), (frame_w // 2, frame_h), white_prm, 2)
                     else:
                         hand_crd = np.vstack([hand_crd, hand_mean])
                         cleared = True
