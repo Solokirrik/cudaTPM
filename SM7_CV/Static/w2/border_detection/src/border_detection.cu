@@ -139,8 +139,8 @@ float *gpuReciprocal(float *data, unsigned long size, unsigned width, unsigned h
 	static const int BLOCK_SIZE = 512;
 	const int blockCount = (size+BLOCK_SIZE-1) / BLOCK_SIZE;
 
-	smoothingKernel<<<blockCount, BLOCK_SIZE>>>(gpuData, gpuOutData1, gpuK, size, width, height);
-	gradientKernel<<<blockCount, BLOCK_SIZE>>>(gpuOutData1, gpuOutData2, gpuGx, gpuGy, size, width, height);
+//	smoothingKernel<<<blockCount, BLOCK_SIZE>>>(gpuData, gpuOutData1, gpuK, size, width, height);
+	gradientKernel<<<blockCount, BLOCK_SIZE>>>(gpuData, gpuOutData2, gpuGx, gpuGy, size, width, height);
 	minmaxfilterKernel<<<blockCount, BLOCK_SIZE>>>(gpuOutData2, gpuOutData3, size);
 
 	CUDA_CHECK_RETURN(cudaMemcpy(rc, gpuOutData3, sizeof(float)*size, cudaMemcpyDeviceToHost));
@@ -162,7 +162,7 @@ int main(void)
 	float *data;
 	unsigned long WORK_SIZE = 0;
 
-	std::ifstream myFile("cars.txt");
+	std::ifstream myFile("Labyrinth_3.txt");
 	if (myFile.is_open()) {
 		H = std::count(std::istreambuf_iterator<char>(myFile), std::istreambuf_iterator<char>(), '\n');
 		myFile.seekg(0, myFile.beg);
