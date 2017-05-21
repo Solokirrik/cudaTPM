@@ -4,7 +4,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_image', type=str, help='input image path', default='img.jpg')
+    parser.add_argument('--in_image', type=str, help='input image path', default='Labyrinth_1.png')
 
     args = parser.parse_args()
 
