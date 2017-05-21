@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Name        : border_detection.cu
+ Name        : edge_detect.cu
  Author      : Solo
  Version     :
  Copyright   : 
@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <algorithm>
-#include <numeric>
 #include <stdlib.h>
 #include <string>
 #include <fstream>
@@ -44,27 +43,23 @@ __global__ void smoothingKernel(float *data, float *outdata, float *K, unsigned 
 		int j = idx % k_w;
 		int i = idx / k_w;
 
-//		if (i < -up){
-//			up = -i;
-//		}
-//		else if (i >  k_h - bot){
-//			bot = k_h - i;
-//		}
-//		if(j < -left){
-//			left = -j;
-//		}
-//		else if (j > k_w - right){
-//			right = k_w - j;
-//		}
-		if ((i > -up)&&(i < k_h - bot + 1)&&(j > -left)&&(j < k_w - right + 1)){
+		if (i < -up){
+			up = -i;
+		}
+		else if (i >  k_h - bot){
+			bot = k_h - i;
+		}
+		if(j < -left){
+			left = -j;
+		}
+		else if (j > k_w - right){
+			right = k_w - j;
+		}
 			for(int k = up; k < bot; k++){
 				for(int l = left; l < right; l++){
 					outdata[idx] += sigma_m * K[(k + new_cen)*mtrx_w + l + new_cen] * data[(i + k)*k_w + (j + l)];
 				}
 			}
-		}else{
-			outdata[idx] = 0;
-		}
 	}
 }
 
@@ -84,19 +79,18 @@ __global__ void gradientKernel(float *data, float *outdata, float *Gx, float *Gy
 		float Gxx = 0;
 		float Gyy = 0;
 
-//		if (i < -up){
-//			up = -i;
-//		}
-//		else if (i >  k_h - bot){
-//			bot = k_h - i;
-//		}
-//		if(j < -left){
-//			left = -j;
-//		}
-//		else if (j > k_w - right){
-//			right = k_w - j;
-//		}
-		if ((i > -up)&&(i < k_h - bot + 1)&&(j > -left)&&(j < k_w - right + 1)){
+		if (i < -up){
+			up = -i;
+		}
+		else if (i >  k_h - bot){
+			bot = k_h - i;
+		}
+		if(j < -left){
+			left = -j;
+		}
+		else if (j > k_w - right){
+			right = k_w - j;
+		}
 			for(int k = up; k < bot; k++){
 				for(int l = left; l < right; l++){
 					Gxx += Gx[(k + new_cen) * mtrx_w + l + new_cen] * data[(i + k)*k_w + (j + l)];
@@ -104,9 +98,6 @@ __global__ void gradientKernel(float *data, float *outdata, float *Gx, float *Gy
 					outdata[idx] = sqrt(pow(Gxx, 2) + pow(Gyy, 2));
 				}
 			}
-		}else{
-			outdata[idx] = 0;
-		}
 	}
 }
 
@@ -148,9 +139,8 @@ float *gpuReciprocal(float *data, unsigned long size, unsigned width, unsigned h
 	static const int BLOCK_SIZE = 512;
 	const int blockCount = (size+BLOCK_SIZE-1) / BLOCK_SIZE;
 
-
-	gradientKernel<<<blockCount, BLOCK_SIZE>>>(gpuData, gpuOutData1, gpuGx, gpuGy, size, width, height);
-	smoothingKernel<<<blockCount, BLOCK_SIZE>>>(gpuOutData1, gpuOutData2, gpuK, size, width, height);
+	smoothingKernel<<<blockCount, BLOCK_SIZE>>>(gpuData, gpuOutData1, gpuK, size, width, height);
+	gradientKernel<<<blockCount, BLOCK_SIZE>>>(gpuOutData1, gpuOutData2, gpuGx, gpuGy, size, width, height);
 	minmaxfilterKernel<<<blockCount, BLOCK_SIZE>>>(gpuOutData2, gpuOutData3, size);
 
 	CUDA_CHECK_RETURN(cudaMemcpy(rc, gpuOutData3, sizeof(float)*size, cudaMemcpyDeviceToHost));
@@ -160,13 +150,6 @@ float *gpuReciprocal(float *data, unsigned long size, unsigned width, unsigned h
 	CUDA_CHECK_RETURN(cudaFree(gpuOutData1));
 	CUDA_CHECK_RETURN(cudaFree(gpuOutData2));
 	CUDA_CHECK_RETURN(cudaFree(gpuOutData3));
-
-//	for (int i = 0; i < height; i++) {
-//		for (unsigned j = 0; j < width; ++j) {
-//			std::cout << rc[i * width + j] << " ";
-//		}
-//		std::cout << std::endl;
-//	}
 
 	return rc;
 }
@@ -179,7 +162,7 @@ int main(void)
 	float *data;
 	unsigned long WORK_SIZE = 0;
 
-	std::ifstream myFile("table.txt");
+	std::ifstream myFile("cars.txt");
 	if (myFile.is_open()) {
 		H = std::count(std::istreambuf_iterator<char>(myFile), std::istreambuf_iterator<char>(), '\n');
 		myFile.seekg(0, myFile.beg);
@@ -207,6 +190,7 @@ int main(void)
 	else {
 		std::cout << "File not found" << std::endl;
 	}
+	myFile.close();
 
 	float *recGpu = gpuReciprocal(data, WORK_SIZE, W, H);
 
@@ -223,10 +207,6 @@ int main(void)
 	return 0;
 }
 
-/**
- * Check the return value of the CUDA runtime API call and exit
- * the application if the call has failed.
- */
 static void CheckCudaErrorAux (const char *file, unsigned line, const char *statement, cudaError_t err)
 {
 	if (err == cudaSuccess)
