@@ -4,8 +4,8 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_image', type=str, help='input image path', default='Labyrinth_3.png')
-    parser.add_argument('--out_file', type=str, help='output text file path', default='Labyrinth_3.txt')
+    parser.add_argument('--in_image', type=str, help='input image path', default='./pic/table.jpg')
+    parser.add_argument('--out_file', type=str, help='output text file path', default='./txtpic/table.txt')
 
     args = parser.parse_args()
 

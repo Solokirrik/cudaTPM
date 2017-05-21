@@ -4,12 +4,12 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_file', type=str, help='input text file path', default='Labyrinth_1cuda.txt')
+    parser.add_argument('--in_file', type=str, help='input text file path', default='/out/table2.txt')
 
     args = parser.parse_args()
 
     img = np.loadtxt(args.in_file, dtype=int)
-    img = img.astype(np.uint8)
+    img = 50*img.astype(np.uint8)
     
     cv2.imshow('image', img)
     cv2.waitKey(0)
