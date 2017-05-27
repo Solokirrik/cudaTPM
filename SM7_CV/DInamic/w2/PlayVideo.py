@@ -7,7 +7,7 @@ CASCADE = "./haar-hand.xml"
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_video', type=str, help='input video path', default='./OpenClose2.avi')
+    parser.add_argument('--in_video', type=str, help='input video path', default='./video_samples/Long.avi')
     parser.add_argument('--in_cascade', type=str, help='input cascade path', default=CASCADE)
 
     args = parser.parse_args()

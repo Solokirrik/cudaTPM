@@ -7,21 +7,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 
 digits = load_digits()
-plt.gray()
-plt.matshow(digits.images[0])
-plt.show()
+# plt.gray()
+# plt.matshow(digits.images[0])
+# plt.show()
 
 zeros = digits.data[np.where(digits.target==0)[0]]
 ones = digits.data[np.where(digits.target==1)[0]]
-two = digits.data[np.where(digits.target==2)[0]]
-three = digits.data[np.where(digits.target==3)[0]]
-four = digits.data[np.where(digits.target==4)[0]]
-five = digits.data[np.where(digits.target==5)[0]]
-data_set = np.concatenate([ones,zeros, two, three, four, five])
-target = np.concatenate([np.ones((ones.shape[0],1)),np.zeros((zeros.shape[0],1))
-                            # ,np.zeros((two.shape[0],1)), np.zeros((three.shape[0], 1)),
-                         # np.zeros((four.shape[0],1)), np.zeros((five.shape[0],1))
-                        ])[:,0].T
+data_set = np.concatenate([ones,zeros])
+target = np.concatenate([np.ones((ones.shape[0],1)),np.zeros((zeros.shape[0],1))])[:,0].T
+
 ids = np.arange(target.shape[0])
 np.random.shuffle(ids)
 data_set = data_set[ids]

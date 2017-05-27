@@ -90,6 +90,12 @@ class DecisionTreeClassifier:
         out = np.array([item_beta_g_arr[bestG][1], item_beta_g_arr[bestG][2]])
         return out
 
+    def get_with_sort(self, y_vec, inp_vec):
+        srtd_ind = inp_vec[:,0].argsort()
+        x_vec = inp_vec[srtd_ind]
+        y_vec = y_vec[srtd_ind]
+
+
     def fit(self, X_train, y_train):
         self.x_arrList = self._init_list_of_arrs_(self._list_size_)
         self.y_arrList = self._init_list_of_arrs_(self._list_size_)
@@ -184,6 +190,17 @@ df = df.dropna()
 X = df.as_matrix(columns=df.columns[1:])
 y = df.as_matrix(columns=df.columns[:1])
 y = y.reshape(y.shape[0])
+
+ind_list = list()
+sortoo = X[:,0].argsort()
+a1 = X[sortoo]
+y1 = y[sortoo]
+u = np.unique(y1)
+olo = np.where(y1 == u[0])
+for i in range(1, olo[0].shape[0]-1):
+    if olo[0][i]+1 != olo[0][i+1]:
+        ind_list.append(i)
+
 #
 # iris = load_iris()
 # X = iris.data
