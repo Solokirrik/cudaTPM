@@ -4,14 +4,15 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--in_file', type=str, help='input text file path', default='./out/Labyrinth_1cu.txt')
+    parser.add_argument('--in_file', type=str, help='input text file path', default='./out/1facetune_rgb.txt')
 
     args = parser.parse_args()
 
     img = np.loadtxt(args.in_file, dtype=int)
     img = img.astype(np.uint8)
 
-    np.save('labi.jpg', img)
+    # np.save('1facetune_gray.jpg', img)
+    cv2.imwrite('./out/1facetune_rgb.png', img)
     cv2.imshow('image', img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
