@@ -7,13 +7,5 @@ ASM/
 **/infoo/
 **/.idea/
 **/.~**
-**/trainResized/
-**/testResized/
 toServer.txt
 **/256_ObjectCategories.tar
-**/db/
-**/videos/
-**/lfw2/
-**/Screenshot0*.png
-**/model.npz
-**/nn_par**.dat
