@@ -1,5 +1,6 @@
 ASM/
 **/.ipynb_checkpoints/
+**/__pycache__/
 **/Debug/
 **/pictures/
 *.zip
@@ -10,4 +11,9 @@ ASM/
 **/testResized/
 toServer.txt
 **/256_ObjectCategories.tar
-**/People/
+**/db/
+**/videos/
+**/lfw2/
+**/Screenshot0*.png
+**/model.npz
+**/nn_par**.dat
