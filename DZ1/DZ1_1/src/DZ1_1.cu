@@ -7,54 +7,85 @@
  Description : CUDA compute reciprocals
  ============================================================================
  */
-
+#include <iostream>
+#include <fstream>
 #include <numeric>
 #include <stdlib.h>
-#include <iostream>
 #include <iomanip>
+
+using namespace std;
 
 static void CheckCudaErrorAux (const char *, unsigned, const char *, cudaError_t);
 #define CUDA_CHECK_RETURN(value) CheckCudaErrorAux(__FILE__,__LINE__, #value, value)
 
-static const int time_s = 10;
-static const float eps = 1e-3;
-static const float st_len = 100.0;
+static const int dT = 5;
+static const unsigned tot_time = 100;
+static const float len = 10.0;
 static const float ht = 0.001;
 static const float hx = 0.1;
-static const float hx2 = 0.01;
-static const float hthx2 = ht/hx2;
-//static const float hx2ht = 0.5*hx2/ht;
 
+static const float A = -ht/(hx*hx);
+static const float B = 2*ht/(hx*hx) + 1;
+static const float C = -ht/(hx*hx);
 
-__global__ void reciprocalKernel(float *k_cur, float *k_next, bool fl, unsigned k_size) {
+ofstream fout("temp.txt");
+
+// ядро разогрева одного конца
+__global__ void kernel_data_heat(float *data, float *newdata, unsigned vectorSize) {
 	unsigned idx = blockIdx.x*blockDim.x+threadIdx.x;
-	if ((idx == 0) && fl){
-		k_cur[idx] = k_next[idx] + 5 * ht;
-	} else	if (idx < k_size - 1) {
-//		k_next[idx] = (k_cur[idx] + hthx2 * k_next[idx + 1] + hthx2 * k_next[idx - 1]) * hx2ht;
-		k_cur[idx] = - hthx2 * k_next[idx + 1] + 2*hthx2*k_next[idx] + hthx2 * k_next[idx - 1];
+	if (idx < vectorSize - 1){
+		newdata[idx] = data[idx];
+		if (idx == 0){
+			newdata[idx] = data[idx] + dT * 0.1;
+		}
 	}
 }
 
+// ядро расчёта приближения
+__global__ void kernel_data_calc(float *newData, float *stbData, float *bufData, unsigned vectorSize) {
+	unsigned idx = blockIdx.x*blockDim.x+threadIdx.x;
+	if ((idx > 0)&&(idx < vectorSize - 1)){
+		newData[idx] = bufData[idx] + (stbData[idx] - (A*bufData[idx+1] + B*bufData[idx] + C*bufData[idx-1]));
+	}
+	else if(idx == vectorSize - 1){
+		newData[idx] = 0;
+	}
+}
+
+// вывод в файл
+void print_to_file(float *recGpu, unsigned long a_width)
+{
+	for (unsigned long j = 0; j < a_width; ++j) {
+		fout << recGpu[j] << " ";
+	}
+	fout << endl;
+}
 
 float *gpuReciprocal(float *hostData, unsigned size)
 {
-	float ht_count = time_s / ht;
 	float GPUTime = 0.0f;
 	float *rc = new float[size];
-	float *devNext;
-	float *devCur;
-	float *buf;
 
-	bool fl = false;
+	float *buf;			// буфер обмена обновления и нового приближения
+	float *heatedData;	// буфер разогрева конца
+
+	float *devStbData;	// установившиеся значение
+	float *devNewData;	// обновлённые значения на шаге приближения
+	float *devBufData;	// буфер приближения к базе
 
 	cudaEvent_t start, stop;
 	size_t mem_size = sizeof(float) * size;
 
-	CUDA_CHECK_RETURN(cudaMalloc((void **)&devNext, mem_size));
-	CUDA_CHECK_RETURN(cudaMalloc((void **)&devCur, mem_size));
-	CUDA_CHECK_RETURN(cudaMemcpy(devNext, hostData, mem_size, cudaMemcpyHostToDevice));
-	CUDA_CHECK_RETURN(cudaMemcpy(devCur, hostData, mem_size, cudaMemcpyHostToDevice));
+	CUDA_CHECK_RETURN(cudaMalloc((void **)&devStbData, mem_size));
+	CUDA_CHECK_RETURN(cudaMalloc((void **)&devNewData, mem_size));
+	CUDA_CHECK_RETURN(cudaMalloc((void **)&devBufData, mem_size));
+	CUDA_CHECK_RETURN(cudaMalloc((void **)&buf, mem_size));
+	CUDA_CHECK_RETURN(cudaMalloc((void **)&heatedData, mem_size));
+
+	CUDA_CHECK_RETURN(cudaMemcpy(devStbData, hostData, mem_size, cudaMemcpyHostToDevice));
+	CUDA_CHECK_RETURN(cudaMemcpy(devNewData, hostData, mem_size, cudaMemcpyHostToDevice));
+	CUDA_CHECK_RETURN(cudaMemcpy(devBufData, hostData, mem_size, cudaMemcpyHostToDevice));
+	CUDA_CHECK_RETURN(cudaMemcpy(heatedData, hostData, mem_size, cudaMemcpyHostToDevice));
 
 	static const int BLOCK_SIZE = 256;
 	const int blockCount = (size+BLOCK_SIZE-1)/BLOCK_SIZE;
@@ -63,49 +94,68 @@ float *gpuReciprocal(float *hostData, unsigned size)
 	cudaEventCreate (&stop);
 	cudaEventRecord (start, 0);
 
-	for (int i = 0; i < ht_count; i++) {
-		for (int j = 0; j < 10000; j++) {
-			reciprocalKernel<<<blockCount, BLOCK_SIZE>>>(devCur, devNext, fl,size);
-			buf = devCur;
-			devCur = devNext;
-			devNext = buf;
+	for (unsigned long i = 0; i < tot_time; i++) {
+		cudaMemcpy(heatedData, devStbData, mem_size, cudaMemcpyDeviceToDevice);
+		kernel_data_heat<<<blockCount, BLOCK_SIZE>>>(devStbData, heatedData, size);
+//		обновление базовых значений
+		cudaMemcpy(devStbData, heatedData, mem_size, cudaMemcpyDeviceToDevice);
+		cudaMemcpy(devBufData, devStbData, mem_size, cudaMemcpyDeviceToDevice);
+		cudaMemcpy(devNewData, devStbData, mem_size, cudaMemcpyDeviceToDevice);
+//		прогон разогрева от нового базового значения
+		for (unsigned long j = 0; j < 1000; j++) {
+			kernel_data_calc<<<blockCount, BLOCK_SIZE>>>(devNewData, devStbData, devBufData, size);
+//			обновление промежуточных значений температуры
+			cudaMemcpy(buf, devBufData, mem_size, cudaMemcpyDeviceToDevice);
+			cudaMemcpy(devBufData, devNewData, mem_size, cudaMemcpyDeviceToDevice);
+			cudaMemcpy(devNewData, buf, mem_size, cudaMemcpyDeviceToDevice);
 		}
+//		запись нового базового значения
+		cudaMemcpy(devStbData, devNewData, mem_size, cudaMemcpyDeviceToDevice);
+		cudaMemcpy(rc, devStbData, mem_size, cudaMemcpyDeviceToHost);
+		print_to_file(rc, size);
 	}
 
 	cudaEventRecord ( stop , 0);
 	cudaEventSynchronize ( stop );
 	cudaEventElapsedTime ( &GPUTime, start, stop);
-//	std::cout << std::setprecision(3) << "GPU time: " << GPUTime << " mS"<< std::endl;
+	cout << "\n" << GPUTime << endl;
 
-	CUDA_CHECK_RETURN(cudaMemcpy(rc, devNext, sizeof(float)*size, cudaMemcpyDeviceToHost));
+	CUDA_CHECK_RETURN(cudaMemcpy(rc, devStbData, mem_size, cudaMemcpyDeviceToHost));
 
-	CUDA_CHECK_RETURN(cudaFree(devNext));
-	CUDA_CHECK_RETURN(cudaFree(devCur));
+	CUDA_CHECK_RETURN(cudaFree(devBufData));
+	CUDA_CHECK_RETURN(cudaFree(devNewData));
+	CUDA_CHECK_RETURN(cudaFree(devStbData));
 
 	return rc;
 }
 
 
-void initData(float *data, unsigned size)
+void initData(float *data, unsigned width)
 {
-	for (unsigned i = 0; i < size; ++i)
+	for (unsigned i = 0; i < width; i++){
 		data[i] = 0.0;
+	}
+	data[0] = 1;
+	data[width - 1] = 0;
 }
 
 int main(void)
 {
-	static const int WORK_SIZE = st_len / hx;
-	float *data = new float[WORK_SIZE];
+	const unsigned a_width = len / hx;
+	float *data = new float[a_width];
+	float *recGpu;
+	initData(data, a_width);
 
-	initData (data, WORK_SIZE);
+	cout << "Init done" << endl;
+	if(fout.is_open()){
+		cout << "Writing data" << endl;
 
-	float *recGpu = gpuReciprocal(data, WORK_SIZE);
+		recGpu = gpuReciprocal(data, a_width);
 
-	for (int i = 0; i < WORK_SIZE; i++){
-		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(4) << std::setw(15)
-			<< recGpu[i];
+		cout << "\n" << "Data saved" << endl;
+	} else {
+		cout << "File could not be opened." << endl;
 	}
-	std::cout << std::endl;
 
 	delete[] data;
 	delete[] recGpu;
