@@ -88,10 +88,12 @@ class MLP():
     def predict(self, X_in):
         L1 = self._sigm_activation(X_in.dot(self.W1))
         L2 = self._sigm_activation(L1.dot(self.W2))
-        return L2
+        pred_result = L2.argmax(axis=1)
+        return pred_result
 
-    def fit_predict(self):
-        pass
+    def fit_predict(self, X_in, y_in, X_pred):
+        self.fit(X_in, y_in)
+        self.predict(X_pred)
 
 # mndata = MNIST('./data')
 # training = mndata.load_training()
@@ -151,14 +153,16 @@ train_data_set, test_data_set, train_target, test_target = train_test_split(data
                                                                             test_size=0.33,
                                                                             random_state=42)
 mlp = MLP()
+
 mlp.W1 = np.load('./W1.npy')
 mlp.W2 = np.load('./W2.npy')
 
 # mlp.fit(train_data_set, train_target)
 pred = mlp.predict(test_data_set)
-# print(pred[:10])
+print("Target:\t\t", test_target[:37].astype(int))
+print("Predicted:\t", pred[:37])
 
-print(roc_auc_score(y_score=pred[:,1], y_true=test_target))
+# print(roc_auc_score(y_score=pred[:,1], y_true=test_target))
 
 # plt.matshow(digits.images[0])
 # plt.gray()
