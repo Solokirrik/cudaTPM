@@ -1,1 +1,2 @@
+![](digits.png)
 ![](BackPropGif.gif)
