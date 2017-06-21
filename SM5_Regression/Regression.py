@@ -27,9 +27,9 @@ class LinearRegression():
         X1 = np.c_[np.ones((Xn.shape[0])), Xn]
         return X1
 
-    def fit(self, X, y, alpha=0.1, d_alp=0.96, eps=1e-8):
+    def fit(self, X, y, alpha=0.01, d_alp=0.97, eps=1e-8):
         X1 = self._norm_and_add(X)
-        if not self.fitted:
+        if not self._fitted:
             self.W = np.random.uniform(size=(X1.shape[1],))
             self._fitted = True
         while 1:
@@ -46,7 +46,7 @@ class LinearRegression():
 
     def predict(self, X):
         X1 = self._norm_and_add(X)
-        return self.linear_activation(X1.dot(self.W))
+        return X1.dot(self.W)
 
     def fit_predict(self, X, y, X_pred):
         self.fit(X, y)
@@ -60,18 +60,18 @@ class LogisticRegression():
         self._delta_W = float("inf")
         self.epoch = 0
 
-    def _sigmoid_activation(self, x):
-        return 1.0 / (1 + np.exp(-x))
-
     def _norm_and_add(self, X):
         Xn = (X - X.min()) / X.ptp(0)
         X1 = np.c_[np.ones((Xn.shape[0])), Xn]
         return X1
 
-    def fit(self, X, y, alpha=0.1, d_alp=0.96, eps=1e-8):
+    def _sigmoid_activation(self, x):
+        return 1.0 / (1 + np.exp(-x))
+
+    def fit(self, X, y, alpha=0.1, d_alp=0.97, eps=1e-8):
         X1 = self._norm_and_add(X)
         if not self._fitted:
-            self.W = np.random.uniform(size=(X1.shape[1], ))
+            self.W = np.random.uniform(size=(X1.shape[1],))
             self._fitted = True
         while 1:
             self._delta_W = np.linalg.norm(self.W)
@@ -84,7 +84,6 @@ class LogisticRegression():
             self.loss_history.append(np.sum(error) / X1.shape[0])
             if abs(self._delta_W - np.linalg.norm(self.W)) < eps:
                 break
-            gradoo = np.linalg.norm(gradient)
 
     def predict(self, X):
         X1 = self._norm_and_add(X)
@@ -105,23 +104,20 @@ y = y.reshape(y.shape[0])
 
 gkf = KFold(n_splits=5, shuffle=False)
 
-# lin = LinearRegression()
+
+# Logistic usage
 log = LogisticRegression()
-
-# X_train, y_train = X, y
-
 for train, test in gkf.split(X, y):
     t1 = time.time()
     X_train, y_train = X[train], y[train]
     X_test, y_test = X[test], y[test]
 
-    log.fit(X_train, y_train)
+    log.fit(X_train, y_train, alpha=0.02, d_alp=0.99, eps=1e-5)
     print(roc_auc_score(y_score=log.predict(X_test), y_true=y_test))
     print("%.3fsec" % (time.time() - t1))
     print("----------------------------------")
 
 fpr, tpr, _ = metrics.roc_curve(y_score=log.predict(X_test), y_true=y_test)
-
 plt.xlim(0, 1.1)
 plt.ylim(0, 1.1)
 plt.grid(True)
@@ -129,17 +125,41 @@ plt.xlabel('FPR')
 plt.ylabel('TPR')
 plt.title('ROC-curve')
 plt.plot(fpr, tpr)
-
-
-fig = plt.figure()
-plt.grid(True)
-fig.suptitle("Training Loss")
-plt.xlabel("Epoch #")
-plt.ylabel("Loss")
-plt.xlim(0, log.epoch)
-plt.ylim(min(lin.loss_history), max(log.loss_history))
-plt.plot(np.arange(0, log.epoch), log.loss_history)
 plt.show()
+
+# Linear usage
+# lin = LinearRegression()
+# for train, test in gkf.split(X, y):
+#     t1 = time.time()
+#     X_train, y_train = X[train], y[train]
+#     X_test, y_test = X[test], y[test]
+#
+#     lin.fit(X_train, y_train, d_alp=0.99, eps=1e-12)
+#     print(roc_auc_score(y_score=lin.predict(X_test), y_true=y_test))
+#     print("%.3fsec" % (time.time() - t1))
+#     print("----------------------------------")
+#
+# fpr, tpr, _ = metrics.roc_curve(y_score=lin.predict(X_test), y_true=y_test)
+# plt.xlim(0, 1.1)
+# plt.ylim(0, 1.1)
+# plt.grid(True)
+# plt.xlabel('FPR')
+# plt.ylabel('TPR')
+# plt.title('ROC-curve')
+# plt.plot(fpr, tpr)
+# plt.show()
+
+
+# Plot loss
+# fig = plt.figure()
+# plt.grid(True)
+# fig.suptitle("Training Loss")
+# plt.xlabel("Epoch #")
+# plt.ylabel("Loss")
+# plt.xlim(0, lin.epoch)
+# plt.ylim(min(lin.loss_history), max(lin.loss_history))
+# plt.plot(np.arange(0, lin.epoch), lin.loss_history)
+# plt.show()
 
 # # add 1st column
 # x = np.array([[ 0,  1,  2],

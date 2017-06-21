@@ -1,7 +1,7 @@
 **/db/
 **/videos/
 **/lfw2/
-**/Screenshot*.png
+**/Screenshot*.*
 **/model.npz
 **/nn_par*.dat
 **/shape_predictor_68*.dat
